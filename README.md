@@ -74,60 +74,61 @@ $$I_k^{\text{new}} = \gamma_0(k)$$
 
 ### 3.1 Image utilisée
 
-L'image traitée est **`cible_64_bruit.png`** (64×64 pixels, niveaux de gris), fournie avec le TP. Elle représente une cible circulaire bruitée sur fond uniforme, ce qui en fait un cas idéal pour valider la segmentation en 2 classes : fond et cible.
+L'image traitée est **`image3_64.png`** (64×64 pixels, niveaux de gris), une image de fleur blanche sur fond noir. Elle présente un fort contraste entre les deux régions (fond sombre vs pétales clairs), ce qui en fait un cas très favorable pour la segmentation en 2 classes.
 
-![Image originale et segmentations](./results/cible_64_bruit_segmentation.png)
+![Image originale et segmentations](./results/image3_64_segmentation.png)
 
 *Figure 1 – De gauche à droite : image originale, segmentation par HMC (EM + MPM + Peano), seuillage d'Otsu, K-Means (K=2).*
 
 ### 3.2 Histogramme et mélange gaussien estimé
 
-![Histogramme et mélange](./results/cible_64_bruit_histogramme.png)
+![Histogramme et mélange](./results/image3_64_histogramme.png)
 
 *Figure 2 – Histogramme normalisé de l'image et mélange gaussien estimé par l'algorithme EM après convergence.*
 
-L'histogramme montre **deux modes distincts** correspondant aux deux classes :
-- **Classe 0 (fond) :** $\mu_0 \approx 100.0$, $\sigma_0 \approx 6.5$
-- **Classe 1 (cible) :** $\mu_1 \approx 109.5$, $\sigma_1 \approx 3.0$
+L'histogramme montre **deux modes très bien séparés** correspondant aux deux classes :
+- **Classe 0 (fond noir) :** $\mu_0 \approx 3.4$, $\sigma_0 \approx 3.7$
+- **Classe 1 (fleur blanche) :** $\mu_1 \approx 214.0$, $\sigma_1 \approx 46.0$
 
-Les deux distributions se chevauchent (les moyennes sont proches avec seulement ~9 niveaux de gris d'écart), ce qui rend la segmentation difficile pour des méthodes sans contexte spatial. On remarque également que la classe 0 a une variance plus grande ($\sigma_0 \approx 6.5$) que la classe 1 ($\sigma_1 \approx 3.0$), ce qui traduit une plus grande hétérogénéité du fond.
+Les deux distributions sont très éloignées (plus de 200 niveaux de gris d'écart), ce qui rend la séparation des classes très aisée. La classe 0 est extrêmement concentrée ($\sigma_0 \approx 3.7$, fond quasi uniforme), tandis que la classe 1 est très étalée ($\sigma_1 \approx 46.0$) car les pétales présentent de fortes variations de luminosité (veines, ombres, dégradés). On remarque que le mélange gaussien estimé (courbe rouge) modélise bien le pic gauche (fond), mais la gaussienne de la classe 1 est trop étalée pour capturer fidèlement la distribution réelle de la fleur, dont les pixels sont concentrés entre 175 et 255. Cela illustre une limite du modèle gaussien sur des distributions asymétriques.
 
 ### 3.3 Courbes de convergence EM
 
-![Convergence des paramètres](./results/cible_64_bruit_EvolParam.png)
+![Convergence des paramètres](./results/image3_64_EvolParam.png)
 
 *Figure 3 – Évolution des paramètres estimés ($\mu$, $\sigma^2$, $t_{kk}$) au fil des itérations EM.*
 
-On observe trois comportements distincts :
+On observe les comportements suivants :
 
-- **Moyennes ($\mu$)** : les deux classes convergent rapidement (~5 itérations) vers des valeurs stables ($\mu_0 \approx 100$, $\mu_1 \approx 109$). La classe 1 (vert) est très stable dès le départ car ses paramètres initiaux étaient déjà proches de la vérité.
-- **Variances ($\sigma^2$)** : la variance de la classe 0 (rouge) monte fortement avant de se stabiliser (~40), tandis que celle de la classe 1 se stabilise rapidement (~10). Cela est cohérent avec la plus grande dispersion du fond.
-- **Probabilités de transition ($t_{kk}$)** : après une perturbation initiale (la classe 0 descend jusqu'à ~0.6 à l'itération 1), les deux classes convergent vers $t_{kk} \approx 0.95$, indiquant une forte persistance spatiale — les régions sont homogènes et les transitions entre classes sont rares.
+- **Moyennes ($\mu$)** : la classe 0 (rouge) part de ~64 et converge rapidement vers $\mu_0 \approx 3$ (fond noir) dès la 2ème itération. La classe 1 (vert) part de ~200 et monte légèrement vers $\mu_1 \approx 214$. Les deux valeurs finales sont stables après ~5 itérations.
+- **Variances ($\sigma^2$)** : les deux classes partent d'une valeur initiale très élevée (~6000), puis convergent : la variance de la classe 1 (vert) se stabilise à $\sigma^2 \approx 2400$ ($\sigma \approx 49$), reflet de la grande dispersion des niveaux de gris de la fleur. Celle de la classe 0 (rouge) descend vers ~0, cohérent avec un fond très sombre et quasi uniforme.
+- **Probabilités de transition ($t_{kk}$)** : les deux classes convergent vers $t_{kk} \approx 0.97$, indiquant une très forte persistance spatiale. C'est cohérent avec une image composée de deux grandes zones homogènes (fond et fleur) avec très peu de pixels de transition.
 
 ![Courbes d'erreur](./results/XY_EvolError.png)
 
 *Figure 4 – Évolution du taux d'erreur par classe et global au fil des itérations EM (sur le signal simulé XY).*
 
-Sur le signal simulé, l'erreur globale chute de **~27% à ~2%** en moins de 10 itérations, ce qui confirme la bonne convergence de l'algorithme EM.
+Sur le signal simulé, l'erreur globale chute de **~20% à ~2.4%** en moins de 10 itérations, confirmant la bonne convergence de l'algorithme EM. La classe 0 (rouge) démarre avec une erreur élevée (~32%) car ses paramètres initiaux sont mal estimés, puis converge rapidement. La classe 1 (vert) reste très faible tout au long, car ses paramètres initiaux étaient déjà proches de la réalité.
 
 ### 3.4 Interprétation des résultats de segmentation
 
 **La segmentation HMC est-elle bonne ?**
 
-En observant la Figure 1, la segmentation HMC détecte correctement la structure circulaire de la cible. Les résultats sont **globalement satisfaisants** mais imparfaits, ce qui s'explique par plusieurs facteurs :
+La segmentation HMC est **très bonne** sur cette image. La fleur est clairement isolée du fond, avec des contours bien définis et une région blanche homogène. Plusieurs facteurs expliquent ce succès :
 
 **Points forts :**
-- La forme annulaire de la cible est reconnaissable dans le résultat HMC.
-- Grâce à la chaîne de Markov, chaque pixel est classé en tenant compte de ses voisins (au sens du parcours de Peano), ce qui réduit le bruit de classification par rapport à Otsu.
+- Le fort contraste entre fond noir ($\mu_0 \approx 3$) et fleur blanche ($\mu_1 \approx 214$) rend la séparation des classes très aisée pour l'algorithme EM, qui converge en très peu d'itérations.
+- La structure markovienne favorise la cohérence spatiale : les grandes zones homogènes (fond, pétales) sont bien préservées, sans pixels isolés aberrants.
+- La très forte persistance estimée ($t_{kk} \approx 0.97$) est bien adaptée à cette image où les transitions fond/fleur sont rares.
 
 **Limites observées :**
-- La segmentation HMC présente des **irrégularités aux contours** de la cible. Cela s'explique par le fait que le parcours de Peano n'est qu'une approximation du voisinage 2D réel : certains pixels proches spatialement se retrouvent éloignés dans le vecteur 1D, et la structure markovienne ne capture donc pas parfaitement la continuité spatiale.
-- Les deux classes ont des niveaux de gris très proches ($\mu_0 \approx 100$ vs $\mu_1 \approx 109$, soit seulement 9 niveaux d'écart sur une plage de 256), ce qui crée une zone d'ambiguïté importante où les deux gaussiennes se chevauchent.
+- Le **pistil sombre** au centre de la fleur n'est pas segmenté séparément : avec K=2 classes, il est rattaché au fond. Le HMC, grâce au contexte markovien, lisse cet artefact et produit une région blanche continue sans trou au centre — ce qui est visible en comparant avec Otsu et K-Means.
+- Les contours des pétales présentent quelques irrégularités en escalier, dues à la résolution de l'image (64×64) et à la linéarisation 2D→1D par le parcours de Peano.
 
 **Comparaison avec Otsu et K-Means :**
-- **Seuillage d'Otsu** : méthode purement globale sans contexte spatial. Le résultat est très bruité avec de nombreux pixels isolés mal classés, surtout dans les zones de transition.
-- **K-Means** : également sans contexte spatial, mais produit des régions visuellement plus propres qu'Otsu sur cette image. Cependant, comme Otsu, il ignore complètement la structure spatiale.
-- **HMC** : l'avantage du modèle markovien est visible — les régions sont **plus continues et moins fragmentées** qu'Otsu, bien que K-Means donne un résultat visuellement similaire ici. L'avantage du HMC serait plus marqué sur des images avec un bruit plus fort.
+- **Seuillage d'Otsu** : produit un résultat globalement correct mais avec un trou noir visible au centre (pistil classé comme fond) et des contours irréguliers.
+- **K-Means** : résultat très similaire à Otsu, avec le même artefact au centre. Sans contexte spatial, chaque pixel est classé indépendamment de ses voisins.
+- **HMC** : produit la segmentation **la plus propre et la plus homogène** des trois méthodes. La région blanche est continue sans trou, ce qui illustre concrètement l'apport du contexte markovien par rapport aux méthodes pixel-indépendantes.
 
 ---
 
@@ -139,4 +140,4 @@ Ce TP a permis d'implémenter les algorithmes centraux du modèle HMC :
 - Le calcul des **probabilités marginales a posteriori** $\gamma_n(k)$ par produit terme à terme de $\alpha$ et $\beta$, utilisées pour la décision MPM.
 - L'étape **M de l'EM** pour la mise à jour automatique de tous les paramètres du modèle (µ, σ², matrice de transition, loi initiale) à partir des statistiques suffisantes $\gamma$ et $\tilde{c}$.
 
-L'application à la segmentation d'image via le **parcours de Peano** montre que le modèle HMC produit une segmentation spatialement plus cohérente que les méthodes sans contexte (Otsu). La principale limite reste l'approximation introduite par la linéarisation 2D→1D, qui ne peut pas capturer parfaitement toutes les relations de voisinage d'une image.
+L'application à la segmentation d'une image de fleur via le **parcours de Peano** montre que le modèle HMC produit une segmentation spatialement plus cohérente et plus propre que les méthodes sans contexte (Otsu, K-Means), en particulier sur des images avec de grandes régions homogènes. La principale limite reste l'approximation introduite par la linéarisation 2D→1D, qui ne peut pas capturer parfaitement toutes les relations de voisinage d'une image 2D.

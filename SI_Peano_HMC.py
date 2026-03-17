@@ -3,8 +3,7 @@ SI_Peano_HMC.py
 Segmentation non supervisée d'une image par chaîne de Markov cachée (HMC)
 avec parcours de Peano (courbe de Hilbert) et algorithme EM.
 
-Auteur : Bamishola AWOJOBI
-Cours  : Technologies du Big Data – Séance #4
+Auteur : Bamishola LOKE
 """
 
 import sys
@@ -32,7 +31,9 @@ from func import (getSteadyState, getAlpha, getBeta, getGamma,
 # ─────────────────────────────────────────────────────────────────────────────
 # Paramètres
 # ─────────────────────────────────────────────────────────────────────────────
-IMAGE_PATH = './Peano/sources/cible_64_bruit.png'
+# IMAGE_PATH = './Peano/sources/cible_64_bruit.png'
+# IMAGE_PATH = './Peano/sources/image_seg.pgm' # nouvelle image  
+IMAGE_PATH = './Peano/sources/image3_64.pgm' # nouvelle image 
 RESULT_DIR = './results'
 os.makedirs(RESULT_DIR, exist_ok=True)
 
@@ -70,7 +71,8 @@ MeanErrorRateTab        = np.zeros(nbIter)
 MeanErrorRateTabbyClass = np.zeros((nbIter, K))
 
 iteration = 0
-meanTabIter[0], varTabIter[0], cTabIter[0] = InitParam(K, Y)
+meanTabIter[0], sigma0, cTabIter[0] = InitParam(K, Y)
+varTabIter[0] = sigma0 ** 2
 tTabIter[0], ITabIter[0] = getProbaMarkov(cTabIter[0])
 
 print(f"\nParamètres initiaux :")

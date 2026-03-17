@@ -40,7 +40,8 @@ if __name__ == '__main__':
     # Parameters initialization
     iteration = 0
     print('--->iteration=', iteration)
-    meanTabIter[iteration, :], varTabIter[iteration, :], cTabIter[iteration, :, :] = InitParam(K, Y)
+    meanTabIter[iteration, :], sigma0, cTabIter[iteration, :, :] = InitParam(K, Y)
+    varTabIter[iteration, :] = sigma0 ** 2
     tTabIter[iteration, :, :], ITabIter[iteration, :] = getProbaMarkov(cTabIter[iteration, :, :])
 
     # Proba computations
