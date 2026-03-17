@@ -1,0 +1,13 @@
+cat > .gitignore << 'EOF'
+# Environnement virtuel
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Données simulées (régénérées automatiquement)
+sources/XY.out
+results/XY_EM_MPM.out
+EOF
